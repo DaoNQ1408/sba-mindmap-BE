@@ -38,13 +38,26 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public CategoryResponse addCategory(CategoryRequest categoryRequest) {
+    public CategoryResponse saveCategory(CategoryRequest categoryRequest) {
 
         endIfCategoryNameExists(categoryRequest.getName());
 
         Category category = categoryMapper.toEntity(categoryRequest);
 
         return categoryMapper.toResponse(categoryRepository.save(category));
+    }
+
+    @Override
+    public CategoryResponse updateCategory(long categoryId, CategoryRequest categoryRequest) {
+
+        endIfCategoryNameExists(categoryRequest.getName());
+
+        Category category = findById(categoryId);
+
+        categoryMapper.updateEntityFromRequest(category, categoryRequest);
+        Category updatedCategory = categoryRepository.save(category);
+
+        return categoryMapper.toResponse(updatedCategory);
     }
 
     public void endIfCategoryNameExists(String categoryName) {
