@@ -8,8 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CollectionRequest {
+public class MindmapRequest {
     private String name;
     private SharedStatus sharedStatus;
-    private Long userId;
+    private Long collectionId;
+    private Long templateId;
 }

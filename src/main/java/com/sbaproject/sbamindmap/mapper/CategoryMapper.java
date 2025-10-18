@@ -12,13 +12,14 @@ import org.springframework.stereotype.Component;
 @Mapper(componentModel = "spring")
 public interface CategoryMapper {
 
+    CategoryResponse toResponse(Category category);
+
+
     @Mapping(target = "id", ignore = true)
     Category toEntity(CategoryRequest categoryRequest);
 
 
-    CategoryResponse toResponse(Category category);
-
-
+    @Mapping(target = "id", ignore = true)
     void updateEntityFromRequest(@MappingTarget Category category,
                                  CategoryRequest categoryRequest);
 }

@@ -34,7 +34,6 @@ public class CollectionController {
 
     @PostMapping
     public ResponseEntity<CollectionResponse> createCollection(@RequestBody CollectionRequest request) {
-
         CollectionResponse created = collectionService.savedCollection(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

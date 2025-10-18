@@ -14,14 +14,17 @@ import org.mapstruct.ReportingPolicy;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CollectionMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user.id", source = "userId")
-    Collection toEntity(CollectionRequest collectionRequest);
-
-
+    @Mapping(target = "userId", source = "user.id")
     CollectionResponse toResponse(Collection collection);
 
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", source = "userId")
+    Collection toEntity(CollectionRequest collectionRequest);
+
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", source = "userId")
     void updateEntityFromRequest(@MappingTarget Collection collection,
                                  CollectionRequest collectionRequest);
 }
