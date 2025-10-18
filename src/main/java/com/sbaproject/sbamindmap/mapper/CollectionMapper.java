@@ -24,6 +24,7 @@ public interface CollectionMapper {
 
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "user", source = "userId")
     void updateEntityFromRequest(@MappingTarget Collection collection,
                                  CollectionRequest collectionRequest);

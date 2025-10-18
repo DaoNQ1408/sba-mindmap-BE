@@ -6,10 +6,12 @@ import com.sbaproject.sbamindmap.entity.Category;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
 
 @Component
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CategoryMapper {
 
     CategoryResponse toResponse(Category category);
@@ -20,6 +22,7 @@ public interface CategoryMapper {
 
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     void updateEntityFromRequest(@MappingTarget Category category,
                                  CategoryRequest categoryRequest);
 }

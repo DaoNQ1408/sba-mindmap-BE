@@ -28,6 +28,7 @@ public interface MindmapMapper {
 
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "template", source = "templateId")
     @Mapping(target = "collection", source = "collectionId")
     void updateEntityFromRequest(@MappingTarget Mindmap mindmap,
