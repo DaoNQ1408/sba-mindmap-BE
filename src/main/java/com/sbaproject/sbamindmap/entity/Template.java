@@ -12,6 +12,7 @@ import org.hibernate.annotations.Type;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "templates")
@@ -44,6 +45,14 @@ public class Template {
 
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL)
     private List<Mindmap> mindmaps;
+
+    @ManyToMany
+    @JoinTable(
+            name = "template_orders",
+            joinColumns = @JoinColumn(name = "template_id"),
+            inverseJoinColumns = @JoinColumn(name = "order_id")
+    )
+    private Set<Packages> packages;
 
     @PrePersist
     public void prePersist() {
