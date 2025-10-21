@@ -1,5 +1,6 @@
 package com.sbaproject.sbamindmap.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -35,9 +36,10 @@ public class Packages {
     private Category category;
 
     @ManyToMany(mappedBy = "packages")
-    private Set<Templates> templates;
+    private Set<Template> templates;
 
     @OneToMany(mappedBy = "packages", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Orders> orders;
 
 }

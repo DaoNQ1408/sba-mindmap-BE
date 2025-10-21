@@ -11,4 +11,5 @@ public interface PackageService {
     public void deletePackage(long pkgId);
     public Packages getPackageById(long pkgId);
     public List<Packages> getPackages();
+    public Packages setTemplateRelated(long pkgId, long templateId);
 }

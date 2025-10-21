@@ -2,6 +2,7 @@ package com.sbaproject.sbamindmap.service;
 
 import com.sbaproject.sbamindmap.dto.request.CommunityRequest;
 import com.sbaproject.sbamindmap.dto.response.CommunityResponse;
+import com.sbaproject.sbamindmap.dto.response.UserResponse;
 
 import java.util.List;
 

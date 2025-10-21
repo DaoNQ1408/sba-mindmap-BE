@@ -59,4 +59,14 @@ public class PackageComtroller {
     public ResponseEntity<ResponseBase> getAllPackages() {
         return ResponseEntity.ok(new ResponseBase(200, "Packages retrieved successfully", packageService.getPackages()));
     }
+
+    @PostMapping("/{pkgId}/template/{templateId}")
+    public ResponseEntity<ResponseBase> setTemplateToPackage(@PathVariable long pkgId, @PathVariable long templateId) {
+        Packages updatedPackage = packageService.setTemplateRelated(pkgId, templateId);
+        if (updatedPackage != null) {
+            return ResponseEntity.ok(new ResponseBase(200, "Template set to package successfully", updatedPackage));
+        } else {
+            return ResponseEntity.status(500).body(new ResponseBase(409, "Failed to set template to package", null));
+        }
+    }
 }

@@ -1,5 +1,7 @@
 package com.sbaproject.sbamindmap.entity;
 
+import com.sbaproject.sbamindmap.enums.CommunityStatus;
+import com.sbaproject.sbamindmap.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,10 +15,8 @@ public class Orders {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long orderId;
-    @Column(name = "price")
-    private double price;
     @Column(name = "ordered status")
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.PENDING;
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
     @ManyToOne

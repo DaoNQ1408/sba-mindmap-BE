@@ -4,5 +4,7 @@ public enum CommunityStatus {
     ACTIVE,
     ARCHIVED,
     SUSPENDED,
-    PENDING_APPROVAL
+    PENDING_APPROVAL;
+
+
 }

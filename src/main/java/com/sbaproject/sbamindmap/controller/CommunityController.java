@@ -3,6 +3,7 @@ package com.sbaproject.sbamindmap.controller;
 import com.sbaproject.sbamindmap.dto.request.CommunityRequest;
 import com.sbaproject.sbamindmap.dto.response.ApiResponse;
 import com.sbaproject.sbamindmap.dto.response.CommunityResponse;
+import com.sbaproject.sbamindmap.dto.response.UserResponse;
 import com.sbaproject.sbamindmap.service.CommunityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

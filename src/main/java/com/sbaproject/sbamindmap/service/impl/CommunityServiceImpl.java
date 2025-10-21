@@ -2,9 +2,11 @@ package com.sbaproject.sbamindmap.service.impl;
 
 import com.sbaproject.sbamindmap.dto.request.CommunityRequest;
 import com.sbaproject.sbamindmap.dto.response.CommunityResponse;
+import com.sbaproject.sbamindmap.dto.response.UserResponse;
 import com.sbaproject.sbamindmap.entity.Community;
 import com.sbaproject.sbamindmap.entity.User;
 import com.sbaproject.sbamindmap.mapper.CommunityMapper;
+import com.sbaproject.sbamindmap.mapper.UserMapper;
 import com.sbaproject.sbamindmap.repository.CommunityRepository;
 import com.sbaproject.sbamindmap.repository.UserRepository;
 import com.sbaproject.sbamindmap.service.CommunityService;
@@ -25,6 +27,7 @@ public class CommunityServiceImpl implements CommunityService {
     private final CommunityRepository communityRepository;
     private final UserRepository userRepository;
     private final CommunityMapper mapper;
+    private final UserMapper userMapper;
 
     @Override
     @Transactional
