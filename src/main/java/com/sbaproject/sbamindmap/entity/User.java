@@ -60,12 +60,6 @@ public class User {
     )
     private List<Template> templates = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
-    private List<ApiKey> apiKeys;
-
-    @OneToMany(mappedBy = "user")
-    private List<Orders> orders;
-
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
