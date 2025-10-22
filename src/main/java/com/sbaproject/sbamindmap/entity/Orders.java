@@ -24,4 +24,7 @@ public class Orders {
     private Packages packages;
     @Column(name = "order_date")
     private LocalDateTime orderDate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 }
