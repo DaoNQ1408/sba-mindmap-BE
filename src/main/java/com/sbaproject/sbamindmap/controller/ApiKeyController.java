@@ -17,14 +17,14 @@ public class ApiKeyController {
 
     // ⚙️ Lấy danh sách API Key hợp lệ
     @GetMapping("/available")
-    public List<ApiKey> listAvailableKeys(@RequestAttribute("uid") Long userId) {
-        // (userId lấy từ JWT / security context)
+    public List<ApiKey> listAvailableKeys(@RequestParam("uid") Long userId) {
+        // (userId lấy từ query param để test, production sẽ dùng JWT)
         return entitlementService.getAvailableKeys(userId);
     }
 
     // ⚙️ Kiểm tra một key cụ thể có hợp lệ không
     @GetMapping("/{id}/check")
-    public boolean checkKey(@RequestAttribute("uid") Long userId, @PathVariable("id") Long keyId) {
+    public boolean checkKey(@RequestParam("uid") Long userId, @PathVariable("id") Long keyId) {
         return entitlementService.isKeyUsable(userId, keyId);
     }
 }
