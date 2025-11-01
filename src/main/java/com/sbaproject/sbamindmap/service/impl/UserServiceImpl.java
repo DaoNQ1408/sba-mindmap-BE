@@ -5,6 +5,8 @@ import com.sbaproject.sbamindmap.repository.UserRepository;
 import com.sbaproject.sbamindmap.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,16 @@ public class UserServiceImpl implements UserService {
                         new EntityNotFoundException(
                                 "User not found with id: " +
                                         userId)
+                );
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByMail((username))
+                .orElseThrow(() ->
+                        new UsernameNotFoundException(
+                                "User not found with username: " +
+                                        username)
                 );
     }
 }

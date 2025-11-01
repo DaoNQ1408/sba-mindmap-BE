@@ -8,6 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.usertype.UserType;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.time.LocalDateTime;
@@ -20,7 +23,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class User {
+public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -28,6 +32,9 @@ public class User {
 
     @Column(name = "mail", length = 150, unique = true, nullable = false)
     private String mail;
+
+    @Column(name = "password", nullable = false)
+    private String password;
 
     @Column(name = "username", length = 50, unique = true, nullable = false)
     private String username;
@@ -70,5 +77,15 @@ public class User {
     public void prePersist() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public java.util.Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.toString()));
+    }
+
+    @Override
+    public String getUsername() {
+        return this.mail;
     }
 }

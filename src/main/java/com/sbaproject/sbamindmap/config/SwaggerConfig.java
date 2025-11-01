@@ -14,10 +14,17 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("SBA Project Documentation")
+                        .title("SBA Mind Map Documentation")
                         .version("1.0")
-                        .description("API cho hệ thống tạo mindmap các môn học")
-                );
+                        .description("API cho hệ thống tạo mind map"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .name("bearerAuth")
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")));
     }
 }
 

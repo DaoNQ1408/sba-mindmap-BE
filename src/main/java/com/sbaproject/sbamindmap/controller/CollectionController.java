@@ -3,9 +3,11 @@ package com.sbaproject.sbamindmap.controller;
 import com.sbaproject.sbamindmap.dto.request.CollectionRequest;
 import com.sbaproject.sbamindmap.dto.response.CollectionResponse;
 import com.sbaproject.sbamindmap.service.CollectionService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,12 +15,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/collections")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class CollectionController {
 
     private final CollectionService collectionService;
 
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CollectionResponse>> getAllCollections() {
         List<CollectionResponse> collections = collectionService.findAllCollections();
         return ResponseEntity.ok(collections);
@@ -33,6 +37,7 @@ public class CollectionController {
 
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('USER')")
     public ResponseEntity<CollectionResponse> createCollection(@RequestBody CollectionRequest request) {
         CollectionResponse created = collectionService.savedCollection(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
