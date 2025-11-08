@@ -7,6 +7,8 @@ import com.sbaproject.sbamindmap.entity.PaymentMethod;
 import com.sbaproject.sbamindmap.entity.Transaction;
 import com.sbaproject.sbamindmap.entity.User;
 import com.sbaproject.sbamindmap.entity.Wallet;
+import com.sbaproject.sbamindmap.enums.TransactionStatus;
+import com.sbaproject.sbamindmap.enums.TransactionType;
 import com.sbaproject.sbamindmap.repository.PaymentMethodRepository;
 import com.sbaproject.sbamindmap.repository.TransactionRepository;
 import com.sbaproject.sbamindmap.repository.UserRepository;
@@ -63,7 +65,8 @@ public class PaymentServiceImpl implements PaymentService {
         Transaction tx = new Transaction();
         tx.setWallet(wallet);
         tx.setAmount(req.getAmount());
-        tx.setStatus("PENDING");
+        tx.setStatus(TransactionStatus.PENDING);
+        tx.setType(TransactionType.DEPOSIT);
         tx.setCreatedAt(LocalDateTime.now());
         tx.setPaymentMethod(paymentMethod); // ✅ BẮT BUỘC
 
@@ -151,12 +154,13 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
         if ("00".equals(responseCode)) {
-            tx.setStatus("SUCCESS");
+            tx.setStatus(TransactionStatus.SUCCESS);
+
             Wallet wallet = tx.getWallet();
             wallet.setBalance(wallet.getBalance() + tx.getAmount());
             walletRepository.save(wallet);
         } else {
-            tx.setStatus("FAILED");
+            tx.setStatus(TransactionStatus.FAILED);
         }
 
         transactionRepository.save(tx);
