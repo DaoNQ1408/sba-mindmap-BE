@@ -10,13 +10,24 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig {
+
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("SBA Project Documentation")
+                        .title("SBA Project API")
                         .version("1.0")
-                        .description("API cho hệ thống tạo mindmap các môn học")
+                        .description("API cho hệ thống Mindmap"))
+                .addSecurityItem(new SecurityRequirement()
+                        .addList("Bearer Authentication"))
+                .components(new Components()
+                        .addSecuritySchemes("Bearer Authentication",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description("Nhập JWT token **không kèm chữ Bearer**")
+                        )
                 );
     }
 }

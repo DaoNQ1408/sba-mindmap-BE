@@ -35,7 +35,6 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     public User update(Long id, User request) {
         User user = getById(id);
-        user.setFullName(request.getFullName());
         user.setRole(request.getRole());
         user.setUserStatus(request.getUserStatus());
         user.setUpdatedAt(LocalDateTime.now());

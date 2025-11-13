@@ -1,11 +1,11 @@
 package com.sbaproject.sbamindmap.controller.admin;
 
 import com.sbaproject.sbamindmap.dto.response.ApiResponse;
+import com.sbaproject.sbamindmap.entity.Transaction;
+import com.sbaproject.sbamindmap.service.admin.AdminTransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.sbaproject.sbamindmap.entity.Orders;
-import com.sbaproject.sbamindmap.repository.OrdersRepository;
 import java.util.*;
 
 @RestController
@@ -13,26 +13,21 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AdminTransactionController {
 
-    private final OrdersRepository ordersRepository;
+    private final AdminTransactionService adminTransactionService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Orders>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.success(ordersRepository.findAll(), "Success"));
+    public ResponseEntity<ApiResponse<List<Transaction>>> getAll() {
+        return ResponseEntity.ok(ApiResponse.success(adminTransactionService.getAll(), "Success"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Orders>> getById(@PathVariable Long id) {
-        return ordersRepository.findById(id)
-                .map(order -> ResponseEntity.ok(ApiResponse.success(order, "Success")))
-                .orElse(ResponseEntity.status(404).body(ApiResponse.error(null, "Transaction not found")));
+    public ResponseEntity<ApiResponse<Transaction>> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(adminTransactionService.getById(id), "Success"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Orders>> delete(@PathVariable Long id) {
-        if (!ordersRepository.existsById(id)) {
-            return ResponseEntity.status(404).body(ApiResponse.error(null, "Transaction not found"));
-        }
-        ordersRepository.deleteById(id);
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        adminTransactionService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Transaction deleted successfully"));
     }
 }

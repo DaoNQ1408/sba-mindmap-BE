@@ -32,8 +32,8 @@ public class User {
     @Column(name = "username", length = 50, unique = true, nullable = false)
     private String username;
 
-    @Column(name = "full_name", length = 50)
-    private String fullName;
+    @Column(name = "password", length = 255, nullable = false)
+    private String password;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
