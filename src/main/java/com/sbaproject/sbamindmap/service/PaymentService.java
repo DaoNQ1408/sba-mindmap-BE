@@ -7,6 +7,6 @@ import java.util.Map;
 
 public interface PaymentService {
     PaymentInitResponse initVnPayPayment(CreateTransactionRequest request);
-
     String handleVnPayCallback(Map<String, String> params);
+    PaymentInitResponse initOrderPayment(Long orderId);
 }

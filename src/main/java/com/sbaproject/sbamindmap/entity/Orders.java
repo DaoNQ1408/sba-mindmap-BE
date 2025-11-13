@@ -1,6 +1,5 @@
 package com.sbaproject.sbamindmap.entity;
 
-import com.sbaproject.sbamindmap.enums.CommunityStatus;
 import com.sbaproject.sbamindmap.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,19 +14,41 @@ public class Orders {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long orderId;
-    @Column(name = "ordered status")
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_status")
     private OrderStatus status = OrderStatus.PENDING;
+
+    @Column(name = "order_date")
+    private LocalDateTime orderDate;
+
+    @Column(name = "activated_at")
+    private LocalDateTime activatedAt;
+
+    @Column(name = "expired_at")
+    private LocalDateTime expiredAt;
+
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
     @ManyToOne
     @JoinColumn(name = "package_id")
     private Packages packages;
-    @Column(name = "order_date")
-    private LocalDateTime orderDate;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Transaction transaction;
+
+    @PrePersist
+    public void prePersist() {
+        if (orderDate == null) {
+            orderDate = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = OrderStatus.PENDING;
+        }
+    }
 }

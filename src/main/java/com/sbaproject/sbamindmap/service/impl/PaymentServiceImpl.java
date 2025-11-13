@@ -3,16 +3,11 @@ package com.sbaproject.sbamindmap.service.impl;
 import com.sbaproject.sbamindmap.config.VnPayConfig;
 import com.sbaproject.sbamindmap.dto.request.CreateTransactionRequest;
 import com.sbaproject.sbamindmap.dto.response.PaymentInitResponse;
-import com.sbaproject.sbamindmap.entity.PaymentMethod;
-import com.sbaproject.sbamindmap.entity.Transaction;
-import com.sbaproject.sbamindmap.entity.User;
-import com.sbaproject.sbamindmap.entity.Wallet;
+import com.sbaproject.sbamindmap.entity.*;
 import com.sbaproject.sbamindmap.enums.TransactionStatus;
 import com.sbaproject.sbamindmap.enums.TransactionType;
-import com.sbaproject.sbamindmap.repository.PaymentMethodRepository;
-import com.sbaproject.sbamindmap.repository.TransactionRepository;
-import com.sbaproject.sbamindmap.repository.UserRepository;
-import com.sbaproject.sbamindmap.repository.WalletRepository;
+import com.sbaproject.sbamindmap.repository.*;
+import com.sbaproject.sbamindmap.service.OdersService;
 import com.sbaproject.sbamindmap.service.PaymentService;
 import com.sbaproject.sbamindmap.util.VnPayUtils;
 import jakarta.transaction.Transactional;
@@ -34,6 +29,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final VnPayConfig vnPayConfig;
     private final UserRepository userRepository;
     private final PaymentMethodRepository paymentMethodRepository;
+    private final OdersRepository odersRepository;
+    private final OdersService odersService;
 
 
     // ✅ 1. KHỞI TẠO THANH TOÁN VNPay
@@ -46,7 +43,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // ✅ Tìm wallet
-        Wallet wallet = walletRepository.findByUserId(req.getUserId())
+        Wallet wallet = walletRepository.findByUser_Id(req.getUserId())
                 .orElseGet(() -> {
                     // ✅ Nếu chưa có thì tạo mới
                     Wallet newWallet = new Wallet();
@@ -157,7 +154,37 @@ public class PaymentServiceImpl implements PaymentService {
             tx.setStatus(TransactionStatus.SUCCESS);
 
             Wallet wallet = tx.getWallet();
-            wallet.setBalance(wallet.getBalance() + tx.getAmount());
+
+            // Nếu là DEPOSIT, cộng tiền vào wallet
+            if (tx.getType() == TransactionType.DEPOSIT) {
+                wallet.setBalance(wallet.getBalance() + tx.getAmount());
+            }
+            // Nếu là PAYMENT (thanh toán order), trừ tiền và kích hoạt order
+            else if (tx.getType() == TransactionType.PAYMENT && tx.getOrder() != null) {
+                // Kiểm tra đủ tiền
+                if (wallet.getBalance() < tx.getAmount()) {
+                    tx.setStatus(TransactionStatus.FAILED);
+                    transactionRepository.save(tx);
+                    return "INSUFFICIENT_BALANCE";
+                }
+
+                // Trừ tiền từ wallet
+                wallet.setBalance(wallet.getBalance() - tx.getAmount());
+
+                // Kích hoạt order
+                try {
+                    odersService.activateOrder(tx.getOrder().getOrderId());
+                } catch (Exception e) {
+                    // Nếu kích hoạt thất bại, hoàn tiền
+                    wallet.setBalance(wallet.getBalance() + tx.getAmount());
+                    tx.setStatus(TransactionStatus.FAILED);
+                    transactionRepository.save(tx);
+                    walletRepository.save(wallet);
+                    return "ORDER_ACTIVATION_FAILED";
+                }
+            }
+
+            wallet.setUpdatedAt(LocalDateTime.now());
             walletRepository.save(wallet);
         } else {
             tx.setStatus(TransactionStatus.FAILED);
@@ -166,6 +193,96 @@ public class PaymentServiceImpl implements PaymentService {
         transactionRepository.save(tx);
 
         return "OK";
+    }
+
+    // ✅ 3. KHỞI TẠO THANH TOÁN ORDER
+    @Override
+    @Transactional
+    public PaymentInitResponse initOrderPayment(Long orderId) {
+        // Lấy order
+        Orders order = odersRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Kiểm tra order phải là PENDING
+        if (order.getStatus() != com.sbaproject.sbamindmap.enums.OrderStatus.PENDING) {
+            throw new RuntimeException("Only PENDING orders can be paid. Current status: " + order.getStatus());
+        }
+
+        // Kiểm tra order có package
+        if (order.getPackages() == null) {
+            throw new RuntimeException("Order must have a package");
+        }
+
+        User user = order.getUser();
+
+        // Tìm hoặc tạo wallet
+        Wallet wallet = walletRepository.findByUser_Id(user.getId())
+                .orElseGet(() -> {
+                    Wallet newWallet = new Wallet();
+                    newWallet.setUser(user);
+                    newWallet.setBalance(0.0);
+                    newWallet.setCreatedAt(LocalDateTime.now());
+                    return walletRepository.save(newWallet);
+                });
+
+        // Lấy giá từ package
+        double amount = order.getPackages().getPrice();
+
+        // Lấy payment method
+        PaymentMethod paymentMethod = paymentMethodRepository
+                .findByName("VNPAY")
+                .orElseThrow(() -> new RuntimeException("Payment method not found: VNPAY"));
+
+        // Tạo transaction PAYMENT
+        Transaction tx = new Transaction();
+        tx.setWallet(wallet);
+        tx.setAmount(amount);
+        tx.setStatus(TransactionStatus.PENDING);
+        tx.setType(TransactionType.PAYMENT);
+        tx.setOrder(order);
+        tx.setCreatedAt(LocalDateTime.now());
+        tx.setPaymentMethod(paymentMethod);
+
+        transactionRepository.save(tx);
+
+        // Tạo VNPay payment URL
+        String txnRef = String.valueOf(tx.getTransactionId());
+        long amountInCents = (long) (amount * 100);
+        String orderInfo = "Thanh toan goi #" + order.getPackages().getName() + " - Order #" + orderId;
+
+        Map<String, String> params = new TreeMap<>();
+        params.put("vnp_Version", "2.1.0");
+        params.put("vnp_Command", "pay");
+        params.put("vnp_TmnCode", vnPayConfig.getTmnCode());
+        params.put("vnp_Amount", String.valueOf(amountInCents));
+        params.put("vnp_CurrCode", "VND");
+        params.put("vnp_TxnRef", txnRef);
+        params.put("vnp_OrderInfo", orderInfo);
+        params.put("vnp_OrderType", "other");
+        params.put("vnp_Locale", "vn");
+        params.put("vnp_ReturnUrl", vnPayConfig.getReturnUrl());
+        params.put("vnp_IpAddr", "127.0.0.1");
+        params.put("vnp_CreateDate", VnPayUtils.getCurrentTime());
+        params.put("vnp_ExpireDate", VnPayUtils.getExpireTime(15));
+
+        StringBuilder query = new StringBuilder();
+        StringBuilder hashData = new StringBuilder();
+
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (query.length() > 0) query.append("&");
+            if (hashData.length() > 0) hashData.append("&");
+
+            String key = entry.getKey();
+            String value = URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8);
+
+            hashData.append(key).append("=").append(value);
+            query.append(key).append("=").append(value);
+        }
+
+        String secureHash = VnPayUtils.hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
+        String paymentUrl = vnPayConfig.getPayUrl() + "?" + query + "&vnp_SecureHash=" + secureHash;
+
+        return new PaymentInitResponse(paymentUrl, txnRef, "Order payment initialized");
     }
 
 }
