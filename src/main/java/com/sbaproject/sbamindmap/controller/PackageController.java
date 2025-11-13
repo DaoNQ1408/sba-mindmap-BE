@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/packages")
-public class PackageComtroller {
+public class PackageController {
 
     @Autowired
     private PackageService packageService;

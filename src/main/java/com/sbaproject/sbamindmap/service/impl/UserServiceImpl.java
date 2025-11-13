@@ -1,10 +1,14 @@
 package com.sbaproject.sbamindmap.service.impl;
 
+import com.sbaproject.sbamindmap.dto.request.CreateUserRequestDto;
 import com.sbaproject.sbamindmap.entity.User;
+import com.sbaproject.sbamindmap.enums.UserRole;
+import com.sbaproject.sbamindmap.enums.UserStatus;
 import com.sbaproject.sbamindmap.repository.UserRepository;
 import com.sbaproject.sbamindmap.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User findById(long userId) {
@@ -24,5 +28,16 @@ public class UserServiceImpl implements UserService {
                                 "User not found with id: " +
                                         userId)
                 );
+    }
+
+    @Override
+    public void createAccount(CreateUserRequestDto dto) {
+        User user = new User();
+        user.setMail(dto.getMail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRole(dto.getRole());
+        user.setUserStatus(UserStatus.ACTIVE);
+
+        userRepository.save(user);
     }
 }
