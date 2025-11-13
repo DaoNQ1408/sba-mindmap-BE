@@ -26,16 +26,23 @@ public class DataInitializer implements CommandLineRunner {
         u1.setMail("admin@gmail.com");
         u1.setUsername("admin");
         u1.setPassword(passwordEncoder.encode("@1"));
+        u1.setFullName("Nguyen Van A");
         u1.setRole(UserRole.ADMIN);
         u1.setUserStatus(UserStatus.ACTIVE);
 
-        userRepository.save(u1);
+        if (userRepository.getByMail("admin@gmail.com") == null) {
+            userRepository.save(u1);
+        }
+
 
         // Seed VNPay payment method (without checking exists)
         PaymentMethod pm = new PaymentMethod();
         pm.setName("VNPAY");
         pm.setIsActive(true);
-        paymentMethodRepository.save(pm);
+        if (paymentMethodRepository.findByName(pm.getName()).isEmpty()) {
+            paymentMethodRepository.save(pm);
+        }
+
 
         System.out.println("🔥 Seeded default admin + VNPAY (NO CHECK MODE)");
 

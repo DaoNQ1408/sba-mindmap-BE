@@ -6,7 +6,7 @@ import com.sbaproject.sbamindmap.entity.Packages;
 import com.sbaproject.sbamindmap.enums.OrderStatus;
 import com.sbaproject.sbamindmap.repository.OrdersRepository;
 import com.sbaproject.sbamindmap.repository.PackagesRepository;
-import com.sbaproject.sbamindmap.service.OdersService;
+import com.sbaproject.sbamindmap.service.OrderService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,9 +17,9 @@ import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
-public class OrderServiceImpl implements OdersService {
+public class OrderServiceImpl implements OrderService {
     @Autowired
-    private OrdersRepository ordersRepository;
+    private OrdersRepository odersRepository;
 
     @Autowired
     private PackagesRepository packagesRepository;
@@ -28,11 +28,11 @@ public class OrderServiceImpl implements OdersService {
     @Transactional
     public Orders creatOrder(OrderRequest ord) {
         Orders newOrder = new Orders();
-        Orders exitedOrder = ordersRepository.findById(newOrder.getOrderId()).orElse(null);
+        Orders exitedOrder = odersRepository.findById(newOrder.getOrderId()).orElse(null);
         if (exitedOrder == null) {
             newOrder.setStatus(newOrder.getStatus());
             newOrder.setOrderDate(LocalDateTime.now());
-            return ordersRepository.save(newOrder);
+            return odersRepository.save(newOrder);
         }
         return null;
     }
@@ -40,11 +40,11 @@ public class OrderServiceImpl implements OdersService {
     @Override
     public Orders setRelatedPackage(long orderId, long packageId) {
         Packages relatedPackage = packagesRepository.findById(packageId).orElseThrow(() -> new EntityNotFoundException("Package not found"));
-        Orders exitedOrder = ordersRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Order is not exited"));
+        Orders exitedOrder = odersRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Order is not exited"));
 
         if (exitedOrder != null && relatedPackage != null) {
             exitedOrder.setPackages(relatedPackage);
-            return ordersRepository.save(exitedOrder);
+            return odersRepository.save(exitedOrder);
         }
         return null;
     }
@@ -52,20 +52,20 @@ public class OrderServiceImpl implements OdersService {
     @Override
     @Transactional
     public Orders updateOrderComplete(long orderId) {
-        Orders exitedOrder = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order is not exited"));
+        Orders exitedOrder = odersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order is not exited"));
         exitedOrder.setStatus(OrderStatus.COMPLETED);
         exitedOrder.setCompletedAt(LocalDateTime.now());
-        return ordersRepository.save(exitedOrder);
+        return odersRepository.save(exitedOrder);
     }
 
     @Override
     @Transactional
     public Orders updateOrder(OrderRequest ord, long orderId) {
-        Orders exitedOrder = ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order is not exited"));
+        Orders exitedOrder = odersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order is not exited"));
         if (exitedOrder != null) {
             exitedOrder.setStatus(ord.getStatus());
             exitedOrder.setOrderDate(LocalDateTime.now());
-            return ordersRepository.save(exitedOrder);
+            return odersRepository.save(exitedOrder);
         }
         return null;
     }
@@ -73,16 +73,16 @@ public class OrderServiceImpl implements OdersService {
     @Override
     @Transactional
     public void deleteOrder(long orderId) {
-        ordersRepository.deleteById(orderId);
+        odersRepository.deleteById(orderId);
     }
 
     @Override
     public Orders getOrderById(long orderId) {
-        return ordersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order is not exited"));
+        return odersRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order is not exited"));
     }
 
     @Override
     public List<Orders> getOrders() {
-        return ordersRepository.findAll();
+        return odersRepository.findAll();
     }
 }

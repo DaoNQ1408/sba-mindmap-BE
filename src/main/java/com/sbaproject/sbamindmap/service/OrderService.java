@@ -5,7 +5,7 @@ import com.sbaproject.sbamindmap.entity.Orders;
 
 import java.util.List;
 
-public interface OdersService {
+public interface OrderService {
     public Orders creatOrder(OrderRequest ord);
     public Orders updateOrder(OrderRequest ord, long orderId);
     public Orders updateOrderComplete( long orderId);
