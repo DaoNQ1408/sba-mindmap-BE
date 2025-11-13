@@ -31,9 +31,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = false)
     public void createAccount(CreateUserRequestDto dto) {
         User user = new User();
         user.setMail(dto.getMail());
+        user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole(dto.getRole());
         user.setUserStatus(UserStatus.ACTIVE);
