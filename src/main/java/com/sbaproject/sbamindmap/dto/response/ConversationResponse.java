@@ -21,5 +21,5 @@ public class ConversationResponse {
     private Long userId;
     private Long apiKeyId;
     private List<MessageResponse> messages;
+    private Integer messageCount; // Số lượng tin nhắn trong conversation
 }
-

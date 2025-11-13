@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
 
     show-sql: true
     properties:
@@ -21,6 +21,12 @@ spring:
 google:
   gemini:
     api-key: ${GEMINI_API_KEY}
+
+openai:
+    api-key: ${OPENAI_API_KEY}
+    model: ${OPENAI_MODEL}
+server:
+  port: 8080
 
 
 vnpay:
