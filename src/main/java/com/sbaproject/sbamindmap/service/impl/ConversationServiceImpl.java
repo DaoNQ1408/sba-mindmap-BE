@@ -12,7 +12,7 @@ import com.sbaproject.sbamindmap.mapper.ConversationMapper;
 import com.sbaproject.sbamindmap.repository.*;
 import com.sbaproject.sbamindmap.service.ConversationService;
 import com.sbaproject.sbamindmap.service.EntitlementService;
-import com.sbaproject.sbamindmap.service.GeminiService;
+import com.sbaproject.sbamindmap.service.ChatGptService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +29,7 @@ public class ConversationServiceImpl implements ConversationService {
     private final GeneratedDataRepository generatedDataRepository;
     private final ApiKeyRepository apiKeyRepository;
     private final UserRepository userRepository;
-    private final GeminiService geminiService;
+    private final ChatGptService chatGptService;
     private final EntitlementService entitlementService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ConversationMapper conversationMapper;
@@ -86,8 +86,8 @@ public class ConversationServiceImpl implements ConversationService {
             systemInstruction = MindmapPromptTemplate.MINDMAP_JSON_INSTRUCTION;
         }
 
-        // Call Gemini
-        String assistantRaw = geminiService.generateWithSystem(systemInstruction, request.getPrompt());
+        // Call OpenAI GPT instead of Gemini
+        String assistantRaw = chatGptService.chatWithSystem(systemInstruction, request.getPrompt());
 
         // Save assistant message
         Message assistantMessage = Message.builder()

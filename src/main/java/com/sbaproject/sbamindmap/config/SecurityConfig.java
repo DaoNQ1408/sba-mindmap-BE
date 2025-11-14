@@ -52,11 +52,11 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    // 🔰 Cấu hình bảo mật tổng thể
+    // 🔰 Cấu hình bảo mật - MỞ HOÀN TOÀN CHO TEST
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Tắt CSRF vì dùng JWT
+                // Tắt CSRF
                 .csrf(csrf -> csrf.disable())
 
                 // Enable CORS với configuration từ WebConfig
@@ -68,29 +68,48 @@ public class SecurityConfig {
                         .xssProtection(xss -> xss.disable())
                 )
 
-                // Stateless session (JWT không cần session)
+                // Stateless session
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Quy định quyền truy cập
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ Cho phép truy cập không cần token
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/v3/api-docs/**",       // swagger docs
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/api/payment/vnpay/callback"
-                        ).permitAll()
+                        // ============ PUBLIC APIs - Không cần đăng nhập ============
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/payment/vnpay/callback").permitAll()
 
-                        // ✅ Phân quyền theo Role (Role trong DB là int)
-                        // ROLE_ADMIN -> quyền full
+                        // ============ API KEYS - USER & ADMIN ============
+                        .requestMatchers("/api/keys/available").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/keys/{id}/check").hasAnyRole("USER", "ADMIN")
+
+                        // ============ GENERATED DATA ============
+                        .requestMatchers("GET", "/api/generated-data/{id}").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/generated-data/**").hasRole("ADMIN")
+
+                        // ============ TEMPLATES ============
+                        .requestMatchers("GET", "/api/templates/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/templates/**").hasRole("ADMIN")
+
+                        // ============ MINDMAPS ============
+                        .requestMatchers("GET", "/api/mindmaps/{id}/detail").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("GET", "/api/mindmaps/{id}").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("GET", "/api/mindmaps").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("POST", "/api/mindmaps/from-generated-data").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("PUT", "/api/mindmaps/{id}").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("POST", "/api/mindmaps").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("DELETE", "/api/mindmaps/{id}").hasRole("ADMIN")
+
+                        // ============ CHAT & CONVERSATIONS ============
+                        .requestMatchers("/api/chat/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/conversations/**").hasAnyRole("USER", "ADMIN")
+
+                        // ============ CHATGPT & GEMINI (Test APIs) ============
+                        .requestMatchers("/api/chatgpt/**").hasRole("ADMIN")
+                        .requestMatchers("/api/gemini/**").hasRole("ADMIN")
+
+                        // ============ ADMIN-ONLY APIs ============
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // ROLE_MODERATOR -> quyền trung gian
-                        .requestMatchers("/api/mod/**").hasAnyRole("ADMIN", "MODERATOR")
-                        // ROLE_USER -> quyền xem cơ bản
-                        .requestMatchers("/api/user/**").hasAnyRole("ADMIN", "MODERATOR", "USER")
 
-                        // Tất cả endpoint khác cần login
+                        // ============ TẤT CẢ CÒN LẠI CẦN AUTHENTICATED ============
                         .anyRequest().authenticated()
                 )
 
@@ -101,13 +120,11 @@ public class SecurityConfig {
                             System.out.println(">>> Auth Entry Point - Exception: " + authException.getMessage());
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         })
-                );
+                )
 
-        // Thêm JWT filter vào trước UsernamePasswordAuthenticationFilter
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // Thêm JWT Filter trước UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 }
-
-

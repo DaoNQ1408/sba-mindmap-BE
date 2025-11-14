@@ -33,9 +33,11 @@ public class Packages {
     private LocalDateTime updatedAt;
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @JsonIgnore
     private Category category;
 
     @ManyToMany(mappedBy = "packages")
+    @JsonIgnore
     private Set<Template> templates;
 
     @OneToMany(mappedBy = "packages", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -43,6 +45,7 @@ public class Packages {
     private List<Orders> orders;
 
     @OneToMany(mappedBy = "aPackage")
+    @JsonIgnore
     private List<ApiKey> apiKeys;
 
 }
