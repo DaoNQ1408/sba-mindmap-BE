@@ -6,7 +6,7 @@ import com.sbaproject.sbamindmap.enums.OrderStatus;
 import com.sbaproject.sbamindmap.enums.TransactionStatus;
 import com.sbaproject.sbamindmap.enums.TransactionType;
 import com.sbaproject.sbamindmap.repository.*;
-import com.sbaproject.sbamindmap.service.OdersService;
+import com.sbaproject.sbamindmap.service.OrderService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,9 +19,9 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class OrderServiceImpl implements OdersService {
+public class OrderServiceImpl implements OrderService {
 
-    private final OdersRepository odersRepository;
+    private final OderRepository odersRepository;
     private final PackagesRepository packagesRepository;
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;

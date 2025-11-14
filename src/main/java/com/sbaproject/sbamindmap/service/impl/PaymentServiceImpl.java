@@ -7,7 +7,7 @@ import com.sbaproject.sbamindmap.entity.*;
 import com.sbaproject.sbamindmap.enums.TransactionStatus;
 import com.sbaproject.sbamindmap.enums.TransactionType;
 import com.sbaproject.sbamindmap.repository.*;
-import com.sbaproject.sbamindmap.service.OdersService;
+import com.sbaproject.sbamindmap.service.OrderService;
 import com.sbaproject.sbamindmap.service.PaymentService;
 import com.sbaproject.sbamindmap.util.VnPayUtils;
 import jakarta.transaction.Transactional;
@@ -29,8 +29,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final VnPayConfig vnPayConfig;
     private final UserRepository userRepository;
     private final PaymentMethodRepository paymentMethodRepository;
-    private final OdersRepository odersRepository;
-    private final OdersService odersService;
+    private final OderRepository odersRepository;
+    private final OrderService odersService;
 
 
     // ✅ 1. KHỞI TẠO THANH TOÁN VNPay

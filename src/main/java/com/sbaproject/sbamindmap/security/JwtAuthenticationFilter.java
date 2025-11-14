@@ -5,7 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,7 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
@@ -66,5 +66,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String servletPath = request.getServletPath();
+
+        System.out.println(">>> shouldNotFilter - URI: " + path);
+        System.out.println(">>> shouldNotFilter - ServletPath: " + servletPath);
+
+        // Bỏ qua filter cho các public endpoints
+        boolean shouldSkip = path.contains("/api/auth/login")
+                || path.contains("/api/auth/register")
+                || path.contains("/v3/api-docs")
+                || path.contains("/swagger-ui")
+                || path.contains("/api/payment/vnpay/callback");
+
+        System.out.println(">>> shouldNotFilter - Should skip: " + shouldSkip);
+        return shouldSkip;
     }
 }

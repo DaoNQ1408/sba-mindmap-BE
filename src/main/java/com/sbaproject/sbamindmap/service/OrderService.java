@@ -6,7 +6,7 @@ import com.sbaproject.sbamindmap.enums.OrderStatus;
 
 import java.util.List;
 
-public interface OdersService {
+public interface OrderService {
     Orders createOrder(OrderRequest ord);
     Orders updateOrder(OrderRequest ord, long orderId);
     Orders activateOrder(long orderId);

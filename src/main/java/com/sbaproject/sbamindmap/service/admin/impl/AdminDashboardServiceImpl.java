@@ -15,7 +15,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final UserRepository userRepository;
     private final PackagesRepository packagesRepository;
     private final TemplateRepository templateRepository;
-    private final OrdersRepository ordersRepository;
+    private final OderRepository ordersRepository;
     private final ApiKeyRepository apiKeyRepository;
     private final CommunityRepository communityRepository;
     private final PostRepository postRepository;

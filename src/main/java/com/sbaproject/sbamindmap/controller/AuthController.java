@@ -31,18 +31,31 @@ public class AuthController {
     // LOGIN
     @PostMapping("/login")
     public ResponseEntity<JWTAuthResponse> login(@RequestBody LoginDto loginDto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginDto.getMail(),
-                        loginDto.getPassword()
-                )
-        );
+        try {
+            System.out.println(">>> Login attempt for email: " + loginDto.getMail());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginDto.getMail(),
+                            loginDto.getPassword()
+                    )
+            );
 
-        String token = tokenProvider.generateToken(authentication);
+            System.out.println(">>> Authentication successful: " + authentication.isAuthenticated());
+            System.out.println(">>> User authorities: " + authentication.getAuthorities());
 
-        return ResponseEntity.ok(new JWTAuthResponse(token));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            String token = tokenProvider.generateToken(authentication);
+
+            System.out.println(">>> Token generated successfully");
+
+            return ResponseEntity.ok(new JWTAuthResponse(token));
+        } catch (Exception e) {
+            System.err.println(">>> Login failed: " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @PostMapping("/register")

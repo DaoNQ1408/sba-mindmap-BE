@@ -22,16 +22,27 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String mail) throws UsernameNotFoundException {
+        System.out.println(">>> Loading user by email: " + mail);
+
         User user = userRepository.getByMail(mail);
+
         if (user == null) {
+            System.err.println(">>> User not found with email: " + mail);
             throw new UsernameNotFoundException("User not found with email: " + mail);
         }
+
+        System.out.println(">>> User found: id=" + user.getId() + ", role=" + user.getRole() + ", status=" + user.getUserStatus());
+
         if (user.getUserStatus() == UserStatus.BANNED) {
+            System.err.println(">>> Account banned for: " + mail);
             throw new LockedException("Your account has been banned.");
         }
         if (user.getUserStatus() == UserStatus.INACTIVE) {
+            System.err.println(">>> Account inactive for: " + mail);
             throw new DisabledException("Your account is inactive.");
         }
+
+        System.out.println(">>> Creating CustomUserDetails for user: " + mail);
         return new CustomUserDetails(user);
     }
 }

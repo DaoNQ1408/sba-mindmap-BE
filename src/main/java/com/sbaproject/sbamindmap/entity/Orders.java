@@ -35,11 +35,11 @@ public class Orders {
     @JoinColumn(name = "package_id")
     private Packages packages;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Transaction transaction;
 
     @PrePersist

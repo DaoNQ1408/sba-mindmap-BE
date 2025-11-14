@@ -10,13 +10,19 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
 
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:myDefaultSecretKeyForJWT123456789012345678901234567890}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}  # 24 hours in milliseconds
 
 google:
   gemini:

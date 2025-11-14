@@ -1,5 +1,6 @@
 package com.sbaproject.sbamindmap.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sbaproject.sbamindmap.enums.UserRole;
 import com.sbaproject.sbamindmap.enums.UserStatus;
 import jakarta.persistence.*;
@@ -32,7 +33,7 @@ public class User {
     @Column(name = "full_name", length = 100, nullable = false)
     private String fullName;
 
-    @Column(name = "username", length = 50, unique = true, nullable = false)
+    @Column(name = "username")
     private String username;
 
     @Column(name = "password", length = 255, nullable = false)
@@ -67,6 +68,7 @@ public class User {
     private List<ApiKey> apiKeys;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Orders> orders;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)

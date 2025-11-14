@@ -4,7 +4,7 @@ import com.sbaproject.sbamindmap.dto.request.OrderRequest;
 import com.sbaproject.sbamindmap.dto.response.ResponseBase;
 import com.sbaproject.sbamindmap.entity.Orders;
 import com.sbaproject.sbamindmap.enums.OrderStatus;
-import com.sbaproject.sbamindmap.service.OdersService;
+import com.sbaproject.sbamindmap.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     @Autowired
-    private OdersService odersService;
+    private OrderService odersService;
 
     /**
      * Tạo Order mới với status PENDING

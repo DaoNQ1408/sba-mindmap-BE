@@ -2,13 +2,11 @@ package com.sbaproject.sbamindmap.service.impl;
 
 import com.sbaproject.sbamindmap.dto.request.WalletDepositRequest;
 import com.sbaproject.sbamindmap.dto.response.WalletResponse;
-import com.sbaproject.sbamindmap.entity.PaymentMethod;
 import com.sbaproject.sbamindmap.entity.Transaction;
 import com.sbaproject.sbamindmap.entity.User;
 import com.sbaproject.sbamindmap.entity.Wallet;
 import com.sbaproject.sbamindmap.enums.TransactionStatus;
 import com.sbaproject.sbamindmap.enums.TransactionType;
-import com.sbaproject.sbamindmap.repository.PaymentMethodRepository;
 import com.sbaproject.sbamindmap.repository.TransactionRepository;
 import com.sbaproject.sbamindmap.repository.UserRepository;
 import com.sbaproject.sbamindmap.repository.WalletRepository;
@@ -28,7 +26,6 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
-    private final PaymentMethodRepository paymentMethodRepository;
 
     /**
      * Lấy thông tin ví theo user ID
@@ -83,16 +80,10 @@ public class WalletServiceImpl implements WalletService {
         wallet.setUpdatedAt(LocalDateTime.now());
         walletRepository.save(wallet);
 
-        // Lấy payment method
-        String paymentMethodName = request.getPaymentMethodName() != null ?
-                request.getPaymentMethodName() : "Wallet";
-        PaymentMethod paymentMethod = paymentMethodRepository.findByName(paymentMethodName)
-                .orElseThrow(() -> new EntityNotFoundException("Payment method not found: " + paymentMethodName));
-
-        // Tạo transaction record
+        // Tạo transaction record (nạp tiền trực tiếp không cần payment method)
         Transaction transaction = new Transaction();
         transaction.setWallet(wallet);
-        transaction.setPaymentMethod(paymentMethod);
+        transaction.setPaymentMethod(null); // Không cần payment method khi nạp tiền trực tiếp
         transaction.setType(TransactionType.DEPOSIT);
         transaction.setStatus(TransactionStatus.SUCCESS);
         transaction.setAmount(request.getAmount());

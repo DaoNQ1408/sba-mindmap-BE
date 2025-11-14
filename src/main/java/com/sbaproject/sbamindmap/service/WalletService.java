@@ -1,6 +1,7 @@
 package com.sbaproject.sbamindmap.service;
 
 import com.sbaproject.sbamindmap.dto.request.WalletDepositRequest;
+import com.sbaproject.sbamindmap.dto.request.WalletRequest;
 import com.sbaproject.sbamindmap.dto.response.WalletResponse;
 import com.sbaproject.sbamindmap.entity.Wallet;
 

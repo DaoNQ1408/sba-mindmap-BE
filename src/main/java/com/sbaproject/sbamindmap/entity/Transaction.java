@@ -22,7 +22,7 @@ public class Transaction {
     private Wallet wallet;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_method_id", nullable = false)
+    @JoinColumn(name = "payment_method_id")
     private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)

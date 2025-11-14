@@ -1,5 +1,6 @@
 package com.sbaproject.sbamindmap.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,6 +19,7 @@ public class Wallet {
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JsonIgnore
     private User user;
 
     @Column(nullable = false)
@@ -30,5 +32,6 @@ public class Wallet {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Transaction> transactions;
 }

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface OdersRepository extends JpaRepository<Orders, Long> {
+public interface OderRepository extends JpaRepository<Orders, Long> {
     List<Orders> findByUser_Id(Long userId);
     List<Orders> findByStatus(OrderStatus status);
 
