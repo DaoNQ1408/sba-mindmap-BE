@@ -1,5 +1,6 @@
 package com.sbaproject.sbamindmap.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sbaproject.sbamindmap.enums.UserRole;
 import com.sbaproject.sbamindmap.enums.UserStatus;
 import jakarta.persistence.*;
@@ -7,8 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.usertype.UserType;
-import org.w3c.dom.stylesheets.LinkStyle;
+//import org.hibernate.usertype.UserType;
+//import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,11 +30,14 @@ public class User {
     @Column(name = "mail", length = 150, unique = true, nullable = false)
     private String mail;
 
-    @Column(name = "username", length = 50, unique = true, nullable = false)
+    @Column(name = "full_name", length = 100, nullable = false)
+    private String fullName;
+
+    @Column(name = "username")
     private String username;
 
-    @Column(name = "full_name", length = 50)
-    private String fullName;
+    @Column(name = "password", length = 255, nullable = false)
+    private String password;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -64,7 +68,11 @@ public class User {
     private List<ApiKey> apiKeys;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Orders> orders;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Wallet wallet;
 
     @PrePersist
     public void prePersist() {

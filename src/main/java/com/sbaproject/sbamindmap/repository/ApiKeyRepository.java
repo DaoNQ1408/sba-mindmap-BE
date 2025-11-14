@@ -21,7 +21,7 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
             SELECT 1 FROM Orders o
             WHERE o.user.id = :userId
               AND o.packages.packageId = k.aPackage.packageId
-              AND o.status = com.sbaproject.sbamindmap.enums.OrderStatus.COMPLETED
+              AND o.status = com.sbaproject.sbamindmap.enums.OrderStatus.ACTIVE
          )
     """)
     List<ApiKey> findAvailableKeys(@Param("userId") Long userId, @Param("now") Instant now);

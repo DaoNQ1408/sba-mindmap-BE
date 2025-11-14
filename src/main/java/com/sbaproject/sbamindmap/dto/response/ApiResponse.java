@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 public class ApiResponse<T> {
 
-    private boolean status;
+    private boolean success; // Changed from 'status' to 'success'
     private T data;
     private String message;
 
