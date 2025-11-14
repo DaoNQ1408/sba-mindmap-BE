@@ -28,7 +28,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final PaymentMethodRepository paymentMethodRepository;
     private final PackagesRepository packagesRepository;
-    private final OrdersRepository ordersRepository;
+    private final OderRepository ordersRepository;
     private final ApiKeyRepository apiKeyRepository;
     private final TemplateRepository templateRepository;
 
@@ -232,7 +232,7 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("   - Admin: admin@gmail.com / @1");
         System.out.println("   - Test User 1 (Unlimited): testuser1@gmail.com / password123 - Calls: 99999");
         System.out.println("   - Test User 2 (Limited): testuser2@gmail.com / password123 - Calls: 2");
-        System.out.println("   - OpenAI API Key: " + (openaiApiKey != null && !openaiApiKey.isEmpty() ? "Configured ✅" : "NOT FOUND ❌"));
+        System.out.println("   - OpenAI API Key: " + (openaiApiKey != null && !openaiApiKey.isEmpty() ? "Configured " : "NOT FOUND "));
         System.out.println("   - Sample Templates: Created ");
     }
 
