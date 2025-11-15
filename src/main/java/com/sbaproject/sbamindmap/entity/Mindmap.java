@@ -36,12 +36,20 @@ public class Mindmap {
     private LocalDateTime updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "collection_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "collection_id")
     private Collection collection;
 
     @ManyToOne
     @JoinColumn(name = "template_id", nullable = false)
     private Template template;
+
+    @ManyToOne
+    @JoinColumn(name = "generated_data_id", nullable = false)
+    private GeneratedData generatedData;
 
     @PrePersist
     public void prePersist() {

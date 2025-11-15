@@ -1,5 +1,6 @@
 package com.sbaproject.sbamindmap.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Conversation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,10 +24,12 @@ public class Conversation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({"conversations", "apiKeys", "mindmaps", "posts", "collections", "password"})
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "api_key_id")
+    @JsonIgnoreProperties({"user", "conversations", "package"})
     private ApiKey apiKey;
 
     private String title;
@@ -40,6 +44,7 @@ public class Conversation {
     private Instant updatedAt;
 
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"conversation"})
     private List<Message> messages = new ArrayList<>();
 
     @PrePersist
@@ -53,4 +58,3 @@ public class Conversation {
         updatedAt = Instant.now();
     }
 }
-

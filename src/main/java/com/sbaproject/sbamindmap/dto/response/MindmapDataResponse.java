@@ -17,7 +17,7 @@ public class MindmapDataResponse {
     private Long conversationId;
     private String nodesJson; // JSON string của nodes
     private String edgesJson; // JSON string của edges
+    private String knowledgeJson; // JSON string của knowledge (MAP từ nodeId -> knowledge items)
     private Boolean isChecked;
     private Instant createdAt;
 }
-

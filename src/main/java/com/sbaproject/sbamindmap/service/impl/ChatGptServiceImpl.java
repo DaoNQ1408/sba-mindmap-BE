@@ -55,4 +55,30 @@ public class ChatGptServiceImpl implements ChatGptService {
             throw new RuntimeException("OpenAI API error: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public String chatWithSystem(String systemInstruction, String userPrompt) {
+        try {
+            Map<String, Object> requestBody = Map.of(
+                    "model", model,
+                    "messages", new Object[]{
+                            Map.of("role", "system", "content", systemInstruction),
+                            Map.of("role", "user", "content", userPrompt)
+                    }
+            );
+
+            String response = webClient.post()
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            JsonNode root = objectMapper.readTree(response);
+            return root.path("choices").get(0)
+                    .path("message").path("content").asText();
+
+        } catch (Exception e) {
+            throw new RuntimeException("OpenAI API error: " + e.getMessage(), e);
+        }
+    }
 }

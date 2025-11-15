@@ -26,9 +26,10 @@ public class ApiKey {
 
     @ManyToOne()
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
-    @Column(name = "key_value", unique = true, nullable = false)
+    @Column(name = "key_value", nullable = false, unique = false)
     private String keyValue;
 
     @Column(name = "remaining_calls")

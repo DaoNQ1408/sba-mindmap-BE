@@ -54,6 +54,7 @@ public class User {
     private UserStatus userStatus;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Collection> collections;
 
     @ManyToMany
@@ -62,9 +63,11 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "template_id")
     )
+    @JsonIgnore
     private List<Template> templates = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<ApiKey> apiKeys;
 
     @OneToMany(mappedBy = "user")
@@ -72,6 +75,7 @@ public class User {
     private List<Orders> orders;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Wallet wallet;
 
     @PrePersist

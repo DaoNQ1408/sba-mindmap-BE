@@ -1,5 +1,6 @@
 package com.sbaproject.sbamindmap.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sbaproject.sbamindmap.pojo.template.StyleConfig;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
@@ -41,9 +42,11 @@ public class Template {
     private LocalDateTime updatedAt;
 
     @ManyToMany(mappedBy = "templates") // ánh xạ từ User
+    @JsonIgnore
     private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Mindmap> mindmaps;
 
     @ManyToMany
@@ -52,6 +55,7 @@ public class Template {
             joinColumns = @JoinColumn(name = "template_id"),
             inverseJoinColumns = @JoinColumn(name = "order_id")
     )
+    @JsonIgnore
     private Set<Packages> packages;
 
     @PrePersist
