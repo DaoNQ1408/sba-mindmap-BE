@@ -9,8 +9,10 @@ import com.sbaproject.sbamindmap.dto.response.ChatMessageResponse;
 import com.sbaproject.sbamindmap.dto.response.ConversationResponse;
 import com.sbaproject.sbamindmap.dto.response.MindmapDataResponse;
 import com.sbaproject.sbamindmap.entity.*;
+import com.sbaproject.sbamindmap.exception.DuplicateObjectException;
 import com.sbaproject.sbamindmap.repository.*;
 import com.sbaproject.sbamindmap.service.ChatService;
+import com.sbaproject.sbamindmap.util.MathTopicValidator;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +34,13 @@ import java.util.stream.Collectors;
 @Transactional
 public class ChatServiceImpl implements ChatService {
 
-    private final OpenAiService openAiService;
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final GeneratedDataRepository generatedDataRepository;
     private final TemplateRepository templateRepository;
     private final UserRepository userRepository;
+    private final ApiKeyRepository apiKeyRepository;
+    private final MathTopicValidator mathTopicValidator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${openai.model:gpt-3.5-turbo}")
@@ -44,74 +48,110 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatMessageResponse generateMindmap(GenerateMindmapRequest request) {
-        log.info("Generating mindmap for topic: {}, grade: {}", request.getTopic(), request.getGrade());
+        log.info("🚀 Generating mindmap - Topic: '{}', Grade: {}", request.getTopic(), request.getGrade());
 
-        // 1. Tìm hoặc tạo user giả lập
+        // 1. Validate topic & grade
+        MathTopicValidator.ValidationResult validation =
+                mathTopicValidator.validate(request.getTopic(), request.getGrade());
+
+        // 2. Tìm hoặc tạo user
         User user = getOrCreateTestUser(request.getUserId());
 
-        // 2. Tìm hoặc tạo conversation
+        // 3. Tìm hoặc tạo conversation
         Conversation conversation = getOrCreateConversation(request.getConversationId(), user, request.getTopic());
 
-        // 3. Tìm template nếu có
-        Template template = null;
-        if (request.getTemplateId() != null) {
-            template = templateRepository.findById(request.getTemplateId())
-                    .orElseThrow(() -> new RuntimeException("Template not found"));
-        }
-
-        // 4. Tạo user message
+        // 4. Lưu user message
         String userPrompt = String.format(OpenAIPromptTemplate.USER_PROMPT_TEMPLATE,
                 request.getGrade(), request.getTopic());
-
         Message userMessage = createAndSaveMessage(conversation, "user", userPrompt);
 
-        // 5. Gọi OpenAI API
-        String aiResponse = callOpenAI(conversation, OpenAIPromptTemplate.MINDMAP_SYSTEM_INSTRUCTION, userPrompt);
+        // 5. Nếu validation thất bại -> trả lời từ chối
+        if (!validation.isValid()) {
+            log.warn("❌ Invalid math topic or grade: {}", validation.getErrorMessage());
 
-        // 6. Validate và parse JSON
+            String rejectionMessage = validation.getErrorMessage();
+            Message assistantMessage = createAndSaveMessage(conversation, "assistant", rejectionMessage);
+
+            conversation.setUpdatedAt(Instant.now());
+            conversationRepository.save(conversation);
+
+            return buildChatMessageResponse(assistantMessage, null);
+        }
+
+        // 6. Lấy API key từ DB
+        ApiKey apiKey = getActiveApiKey(user.getId());
+
+        // 7. Gọi OpenAI API
+        String aiResponse = callOpenAI(conversation, apiKey.getKeyValue(),
+                OpenAIPromptTemplate.MINDMAP_SYSTEM_INSTRUCTION, userPrompt);
+
+        // 8. Validate và parse JSON (bao gồm knowledge)
         MindmapJsonData mindmapData = validateAndParseMindmapJson(aiResponse);
 
-        // 7. Lưu assistant message
+        // 9. Lưu assistant message
         Message assistantMessage = createAndSaveMessage(conversation, "assistant", aiResponse);
 
-        // 8. Lưu generated data
+        // 10. Lưu generated data với knowledgeJson
         GeneratedData generatedData = GeneratedData.builder()
                 .message(assistantMessage)
                 .nodes(mindmapData.nodesJson)
                 .edges(mindmapData.edgesJson)
+                .knowledgeJson(mindmapData.knowledgeJson)
                 .isChecked(false)
                 .build();
         generatedDataRepository.save(generatedData);
 
-        // 9. Update conversation
+        // 11. Giảm remaining_calls
+        apiKey.setRemainingCalls(apiKey.getRemainingCalls() - 1);
+        apiKeyRepository.save(apiKey);
+
+        // 12. Update conversation
         conversation.setUpdatedAt(Instant.now());
         conversationRepository.save(conversation);
 
-        log.info("Mindmap generated successfully for conversation: {}", conversation.getConversationId());
+        log.info("✅ Mindmap generated successfully - ConversationId: {}, GeneratedDataId: {}",
+                conversation.getConversationId(), generatedData.getGeneratedDataId());
 
         return buildChatMessageResponse(assistantMessage, generatedData);
     }
 
     @Override
     public ChatMessageResponse chat(ChatRequest request) {
-        log.info("Processing chat message for user: {}", request.getUserId());
+        log.info("💬 Processing chat message for user: {}", request.getUserId());
 
-        // 1. Tìm hoặc tạo user
+        // 1. Validate nội dung có phải Toán không
+        MathTopicValidator.ValidationResult validation =
+                mathTopicValidator.validate(request.getMessage(), "10"); // Giả sử grade mặc định
+
+        // 2. Tìm hoặc tạo user
         User user = getOrCreateTestUser(request.getUserId());
 
-        // 2. Tìm hoặc tạo conversation
+        // 3. Tìm hoặc tạo conversation
         Conversation conversation = getOrCreateConversation(request.getConversationId(), user, "General Chat");
 
-        // 3. Lưu user message
+        // 4. Lưu user message
         Message userMessage = createAndSaveMessage(conversation, "user", request.getMessage());
 
-        // 4. Gọi OpenAI API
-        String aiResponse = callOpenAI(conversation, null, request.getMessage());
+        String aiResponse;
 
-        // 5. Lưu assistant message
+        // 5. Nếu không hợp lệ -> từ chối
+        if (!validation.isValid()) {
+            log.warn("❌ Invalid chat topic: {}", validation.getErrorMessage());
+            aiResponse = validation.getErrorMessage();
+        } else {
+            // 6. Lấy API key & gọi OpenAI
+            ApiKey apiKey = getActiveApiKey(user.getId());
+            aiResponse = callOpenAI(conversation, apiKey.getKeyValue(), null, request.getMessage());
+
+            // Giảm remaining_calls
+            apiKey.setRemainingCalls(apiKey.getRemainingCalls() - 1);
+            apiKeyRepository.save(apiKey);
+        }
+
+        // 7. Lưu assistant message
         Message assistantMessage = createAndSaveMessage(conversation, "assistant", aiResponse);
 
-        // 6. Update conversation
+        // 8. Update conversation
         conversation.setUpdatedAt(Instant.now());
         conversationRepository.save(conversation);
 
@@ -121,12 +161,19 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(readOnly = true)
     public List<ChatMessageResponse> getConversationHistory(Long conversationId) {
-        List<Message> messages = messageRepository.findByConversationConversationIdOrderByCreatedAtAsc(conversationId);
+        log.info("📜 Fetching conversation history for ID: {}", conversationId);
+
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found with ID: " + conversationId));
+
+        List<Message> messages = messageRepository
+                .findByConversationConversationIdOrderByCreatedAtAsc(conversationId);
 
         return messages.stream()
                 .map(msg -> {
                     GeneratedData genData = generatedDataRepository.findAll().stream()
-                            .filter(gd -> gd.getMessage().getMessageId().equals(msg.getMessageId()))
+                            .filter(gd -> gd.getMessage() != null &&
+                                    gd.getMessage().getMessageId().equals(msg.getMessageId()))
                             .findFirst()
                             .orElse(null);
                     return buildChatMessageResponse(msg, genData);
@@ -137,8 +184,10 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(readOnly = true)
     public List<ConversationResponse> getUserConversations(String userId) {
+        log.info("📋 Fetching conversations for user: {}", userId);
+
         User user = userRepository.findById(parseUserId(userId))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
         List<Conversation> conversations = conversationRepository
                 .findByUserIdAndIsActiveOrderByUpdatedAtDesc(user.getId(), true);
@@ -150,11 +199,13 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ConversationResponse createConversation(String userId, String title) {
+        log.info("➕ Creating new conversation for user: {} with title: {}", userId, title);
+
         User user = getOrCreateTestUser(userId);
 
         Conversation conversation = Conversation.builder()
                 .user(user)
-                .title(title)
+                .title(title != null ? title : "New Conversation")
                 .isActive(true)
                 .build();
 
@@ -168,15 +219,7 @@ public class ChatServiceImpl implements ChatService {
     private User getOrCreateTestUser(String userId) {
         Long id = parseUserId(userId);
         return userRepository.findById(id)
-                .orElseGet(() -> {
-                    User newUser = User.builder()
-                            .id(id)
-                            .username("test-user-" + id)
-                            .mail("testuser" + id + "@example.com")
-                            .fullName("Test User " + id)
-                            .build();
-                    return userRepository.save(newUser);
-                });
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
     }
 
     private Long parseUserId(String userId) {
@@ -190,7 +233,7 @@ public class ChatServiceImpl implements ChatService {
     private Conversation getOrCreateConversation(Long conversationId, User user, String defaultTitle) {
         if (conversationId != null) {
             return conversationRepository.findById(conversationId)
-                    .orElseThrow(() -> new RuntimeException("Conversation not found"));
+                    .orElseThrow(() -> new RuntimeException("Conversation not found with ID: " + conversationId));
         }
 
         // Tạo conversation mới
@@ -214,7 +257,21 @@ public class ChatServiceImpl implements ChatService {
         return messageRepository.save(message);
     }
 
-    private String callOpenAI(Conversation conversation, String systemInstruction, String userMessage) {
+    private ApiKey getActiveApiKey(Long userId) {
+        List<ApiKey> availableKeys = apiKeyRepository.findAvailableKeys(userId, Instant.now());
+
+        if (availableKeys.isEmpty()) {
+            throw new RuntimeException("No active API key found for user. Please purchase a package.");
+        }
+
+        return availableKeys.get(0);
+    }
+
+    private String callOpenAI(Conversation conversation, String apiKeyValue,
+                             String systemInstruction, String userMessage) {
+        // Tạo OpenAI service với API key từ DB
+        OpenAiService openAiService = new OpenAiService(apiKeyValue, Duration.ofSeconds(60));
+
         List<Message> history = messageRepository
                 .findByConversationConversationIdOrderByCreatedAtAsc(conversation.getConversationId());
 
@@ -239,14 +296,17 @@ public class ChatServiceImpl implements ChatService {
                 .model(model)
                 .messages(chatMessages)
                 .temperature(0.7)
-                .maxTokens(2000)
+                .maxTokens(3000)
                 .build();
 
         try {
-            return openAiService.createChatCompletion(completionRequest)
+            String response = openAiService.createChatCompletion(completionRequest)
                     .getChoices().get(0).getMessage().getContent();
+
+            openAiService.shutdownExecutor();
+            return response;
         } catch (Exception e) {
-            log.error("Error calling OpenAI API", e);
+            log.error("❌ Error calling OpenAI API", e);
             throw new RuntimeException("Failed to get response from OpenAI: " + e.getMessage());
         }
     }
@@ -276,18 +336,26 @@ public class ChatServiceImpl implements ChatService {
 
             JsonNode nodesNode = rootNode.get("nodes");
             JsonNode edgesNode = rootNode.get("edges");
+            JsonNode knowledgeNode = rootNode.get("knowledge");
 
             if (!nodesNode.isArray() || !edgesNode.isArray()) {
                 throw new RuntimeException("Invalid mindmap JSON: 'nodes' and 'edges' must be arrays");
             }
 
+            // Chuyển knowledge thành JSON string (có thể null)
+            String knowledgeJson = null;
+            if (knowledgeNode != null && !knowledgeNode.isNull()) {
+                knowledgeJson = objectMapper.writeValueAsString(knowledgeNode);
+            }
+
             // Trả về JSON string riêng biệt
             return new MindmapJsonData(
                     objectMapper.writeValueAsString(nodesNode),
-                    objectMapper.writeValueAsString(edgesNode)
+                    objectMapper.writeValueAsString(edgesNode),
+                    knowledgeJson
             );
         } catch (Exception e) {
-            log.error("Error parsing mindmap JSON", e);
+            log.error("❌ Error parsing mindmap JSON", e);
             throw new RuntimeException("Invalid mindmap JSON format: " + e.getMessage());
         }
     }
@@ -302,6 +370,7 @@ public class ChatServiceImpl implements ChatService {
                     .conversationId(message.getConversation().getConversationId())
                     .nodesJson(generatedData.getNodes())
                     .edgesJson(generatedData.getEdges())
+                    .knowledgeJson(generatedData.getKnowledgeJson())
                     .isChecked(generatedData.getIsChecked())
                     .createdAt(generatedData.getCreatedAt())
                     .build();
@@ -328,14 +397,16 @@ public class ChatServiceImpl implements ChatService {
                 .build();
     }
 
-    // Inner class để giữ nodes và edges JSON
+    // Inner class để giữ nodes, edges và knowledge JSON
     private static class MindmapJsonData {
         String nodesJson;
         String edgesJson;
+        String knowledgeJson;
 
-        MindmapJsonData(String nodesJson, String edgesJson) {
+        MindmapJsonData(String nodesJson, String edgesJson, String knowledgeJson) {
             this.nodesJson = nodesJson;
             this.edgesJson = edgesJson;
+            this.knowledgeJson = knowledgeJson;
         }
     }
 }

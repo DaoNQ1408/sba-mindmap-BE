@@ -17,11 +17,11 @@ public class Transaction {
     @Column(name = "transaction_id")
     private Long transactionId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "wallet_id", nullable = false)
     private Wallet wallet;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "payment_method_id")
     private PaymentMethod paymentMethod;
 
@@ -39,7 +39,7 @@ public class Transaction {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne()
     @JoinColumn(name = "order_id")
     private Orders order;
 }

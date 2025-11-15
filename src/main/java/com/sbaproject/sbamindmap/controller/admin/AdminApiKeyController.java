@@ -1,5 +1,6 @@
 package com.sbaproject.sbamindmap.controller.admin;
 
+import com.sbaproject.sbamindmap.dto.request.ApiKeyRequest;
 import com.sbaproject.sbamindmap.dto.response.ApiResponse;
 import com.sbaproject.sbamindmap.entity.ApiKey;
 import com.sbaproject.sbamindmap.service.admin.AdminApiKeyService;
@@ -31,10 +32,10 @@ public class AdminApiKeyController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getUsage(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(adminApiKeyService.getUsage(id), "Usage info fetched successfully"));
     }
-
-    @PostMapping
-    public ResponseEntity<ApiResponse<ApiKey>> create(@RequestBody ApiKey apiKey) {
-        return ResponseEntity.ok(ApiResponse.success(adminApiKeyService.create(apiKey), "API key created successfully"));
+ 
+    @PostMapping("{packageId}")
+    public ResponseEntity<ApiResponse<ApiKey>> create(@RequestBody ApiKeyRequest request,@PathVariable Long packageId) {
+        return ResponseEntity.ok(ApiResponse.success(adminApiKeyService.create(request, packageId), "API key created successfully"));
     }
 
     @PutMapping("/{id}")
