@@ -1,5 +1,6 @@
 package com.sbaproject.sbamindmap.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,11 +19,12 @@ public class ApiKey {
     @Column(name = "api_key_id")
     private Long apiKeyId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "package_id")
+    @JsonIgnore
     private Packages aPackage;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "user_id")
     private User user;
 

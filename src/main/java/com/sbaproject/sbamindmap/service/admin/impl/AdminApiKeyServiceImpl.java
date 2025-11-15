@@ -1,17 +1,30 @@
 package com.sbaproject.sbamindmap.service.admin.impl;
 
+import com.sbaproject.sbamindmap.dto.request.ApiKeyRequest;
 import com.sbaproject.sbamindmap.entity.ApiKey;
+import com.sbaproject.sbamindmap.entity.Packages;
 import com.sbaproject.sbamindmap.repository.ApiKeyRepository;
+import com.sbaproject.sbamindmap.repository.PackagesRepository;
 import com.sbaproject.sbamindmap.service.admin.AdminApiKeyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class AdminApiKeyServiceImpl implements AdminApiKeyService {
-
     private final ApiKeyRepository apiKeyRepository;
+
+    @Autowired
+    private PackagesRepository packagesRepository;
+
+    @Value("${GEMINI_API_KEY}")
+    private String geminiApiKey;
+
+    @Value("${OPENAI_API_KEY}")
+    private String openaiApiKey;
 
     @Override
     public List<ApiKey> getAll() {
@@ -25,9 +38,26 @@ public class AdminApiKeyServiceImpl implements AdminApiKeyService {
     }
 
     @Override
-    public ApiKey create(ApiKey apiKey) {
-        return apiKeyRepository.save(apiKey);
+    public ApiKey create(ApiKeyRequest apiKey, Long packageID) {
+        ApiKey newApi = new ApiKey();
+        newApi.setKeyValue(openaiApiKey);
+        newApi.setRemainingCalls(apiKey.getRemainingCalls());
+        newApi.setIsActive(apiKey.getIsActive());
+        newApi.setActivatedAt(apiKey.getActivatedAt());
+        newApi.setExpiredAt(apiKey.getExpiredAt());
+        newApi.setAPackage(getPackageById(packageID));
+        return apiKeyRepository.save(newApi);
     }
+
+    @Override
+    public Packages getPackageById(Long packageId) {
+        return packagesRepository.findById(packageId).orElse(null);
+    }
+
+
+
+
+
 
     @Override
     public ApiKey update(Long id, ApiKey request) {

@@ -79,7 +79,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",       // swagger docs
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/api/payment/vnpay/callback"
+                                "/api/payment/vnpay/callback",
+                                "/api/packages/all"      // Allow public access to packages
                         ).permitAll()
 
                         // ✅ Phân quyền theo Role (Role trong DB là int)
