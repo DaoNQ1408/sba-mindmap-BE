@@ -45,7 +45,6 @@ public class Packages {
     private List<Orders> orders;
 
     @OneToMany(mappedBy = "aPackage")
-    @JsonIgnore
     private List<ApiKey> apiKeys;
 
 }
