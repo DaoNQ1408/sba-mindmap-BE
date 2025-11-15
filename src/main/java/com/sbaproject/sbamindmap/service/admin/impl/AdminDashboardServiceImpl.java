@@ -28,7 +28,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         data.put("totalUsers", userRepository.count());
         data.put("totalPackages", packagesRepository.count());
         data.put("totalTemplates", templateRepository.count());
-        data.put("totalTransactions", ordersRepository.count());
+        data.put("totalOrders", ordersRepository.count());
         data.put("totalApiKeys", apiKeyRepository.count());
         data.put("totalCommunities", communityRepository.count());
         data.put("totalPosts", postRepository.count());
